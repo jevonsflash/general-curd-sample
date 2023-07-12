@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\common.props" />
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+
+		<RootNamespace>Matoapp.Health</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="ClientNotification\**" />
+	  <Compile Remove="Delivery\**" />
+	  <Compile Remove="Report\**" />
+	  <EmbeddedResource Remove="ClientNotification\**" />
+	  <EmbeddedResource Remove="Delivery\**" />
+	  <EmbeddedResource Remove="Report\**" />
+	  <None Remove="ClientNotification\**" />
+	  <None Remove="Delivery\**" />
+	  <None Remove="Report\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+
+
+		<ProjectReference Include="..\..\..\..\infrastructure\Application.Share\Application.Share.csproj" />
+		<ProjectReference Include="..\..\..\Matoapp.Identity\src\Matoapp.Identity.HttpApi.Client\Matoapp.Identity.HttpApi.Client.csproj" />
+		<ProjectReference Include="..\Matoapp.Health.Application.Contracts\Matoapp.Health.Application.Contracts.csproj" />
+		<ProjectReference Include="..\Matoapp.Health.Domain\Matoapp.Health.Domain.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Volo.Abp.AutoMapper" Version="7.2.3" />
+		<PackageReference Include="Volo.Abp.Ddd.Application" Version="7.2.3" />
+	</ItemGroup>
+
+</Project>

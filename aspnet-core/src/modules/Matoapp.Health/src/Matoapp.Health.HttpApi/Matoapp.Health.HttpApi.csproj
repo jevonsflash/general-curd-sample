@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    
+    <RootNamespace>Matoapp.Health</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+	  <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="7.2.3" />
+	  <ProjectReference Include="..\..\..\..\infrastructure\HttpApi.Share\HttpApi.Share.csproj" />
+    <ProjectReference Include="..\Matoapp.Health.Application.Contracts\Matoapp.Health.Application.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

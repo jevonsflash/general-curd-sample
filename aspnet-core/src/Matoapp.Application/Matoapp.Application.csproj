@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Matoapp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Matoapp.Domain\Matoapp.Domain.csproj" />
+    <ProjectReference Include="..\Matoapp.Application.Contracts\Matoapp.Application.Contracts.csproj" />
+    <ProjectReference Include="..\modules\Matoapp.Common\src\Matoapp.Common.Application\Matoapp.Common.Application.csproj" />
+    <ProjectReference Include="..\modules\Matoapp.Health\src\Matoapp.Health.Application\Matoapp.Health.Application.csproj" />
+    <ProjectReference Include="..\modules\Matoapp.Identity\src\Matoapp.Identity.Application\Matoapp.Identity.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Account.Application" Version="7.2.3" />
+    <PackageReference Include="Volo.Abp.Identity.Application" Version="7.2.3" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Application" Version="7.2.3" />
+    <PackageReference Include="Volo.Abp.TenantManagement.Application" Version="7.2.3" />
+    <PackageReference Include="Volo.Abp.FeatureManagement.Application" Version="7.2.3" />
+    <PackageReference Include="Volo.Abp.SettingManagement.Application" Version="7.2.3" />
+  </ItemGroup>
+
+</Project>

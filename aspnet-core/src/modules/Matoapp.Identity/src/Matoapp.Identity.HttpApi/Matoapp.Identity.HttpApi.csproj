@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    
+    <RootNamespace>Matoapp.Identity</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+	  <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="7.2.3" />
+	  <ProjectReference Include="..\Matoapp.Identity.Application.Contracts\Matoapp.Identity.Application.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

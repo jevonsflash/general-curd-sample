@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\common.props" />
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+
+		<RootNamespace>Matoapp.Common</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Volo.Abp.Ddd.Domain" Version="7.2.3" />
+
+		<PackageReference Include="Volo.Abp.AutoMapper" Version="7.2.3" />
+		<PackageReference Include="Volo.Abp.Ddd.Application" Version="7.2.3" />
+		<ProjectReference Include="..\..\..\Matoapp.Identity\src\Matoapp.Identity.Application.Contracts\Matoapp.Identity.Application.Contracts.csproj" />
+		<ProjectReference Include="..\Matoapp.Common.Application.Contracts\Matoapp.Common.Application.Contracts.csproj" />
+		<ProjectReference Include="..\Matoapp.Common.Domain\Matoapp.Common.Domain.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="DataEnumCategory\" />
+	</ItemGroup>
+
+</Project>

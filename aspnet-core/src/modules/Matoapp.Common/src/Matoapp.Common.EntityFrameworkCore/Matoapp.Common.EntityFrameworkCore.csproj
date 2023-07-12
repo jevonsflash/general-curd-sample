@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    
+    <RootNamespace>Matoapp.Common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Volo.Abp.EntityFrameworkCore" Version="7.2.3" />
+    <ProjectReference Include="..\Matoapp.Common.Domain\Matoapp.Common.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

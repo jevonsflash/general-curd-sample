@@ -1,0 +1,14 @@
+docker build --network=host -f ./aspnet-core/src/Matoapp.AuthServer/Dockerfile -t www.matoapp.net:5000/general-curd-sample-auth --no-cache --target final ./aspnet-core
+
+docker push www.matoapp.net:5000/general-curd-sample-auth
+
+docker build --network=host -f ./aspnet-core/src/Matoapp.HttpApi.Host/Dockerfile -t www.matoapp.net:5000/general-curd-sample-service --no-cache --target final ./aspnet-core
+ 
+ docker push www.matoapp.net:5000/general-curd-sample-service
+
+docker pull www.matoapp.net:5000/general-curd-sample-service:latest
+
+docker run -p 44377:44377 --net="host"  -d --restart always  www.matoapp.net:5000/general-curd-sample-service:latest
+
+docker pull www.matoapp.net:5000/general-curd-sample-auth:latest
+docker run -p 44350:44350 --net="host"  -d --restart always  www.matoapp.net:5000/general-curd-sample-auth:latest
