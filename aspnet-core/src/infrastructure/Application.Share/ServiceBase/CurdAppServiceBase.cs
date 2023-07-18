@@ -200,56 +200,19 @@ where TGetListOutputDto : IEntityDto<TKey>
             query = await ApplyOrganizationOrientedFiltered(query, input);
             query = await ApplyRelationToOrientedFiltered(query, input);
             query = await ApplyRelationFromOrientedFiltered(query, input);
+            query = ApplyStartDateOrientedFiltered(query, input);
+            query = ApplyEndDateOrientedFiltered(query, input);
             return query;
         }
 
 
-        protected virtual IQueryable<TEntity> ApplyUserOrientedFiltered(IQueryable<TEntity> query, TGetListInput input)
-        {
-            if (input is IUserOrientedFilter && HasProperty<TEntity>("UserId"))
-            {
-                var property = typeof(TEntity).GetProperty("UserId");
-                var filteredInput = input as IUserOrientedFilter;
-                if (filteredInput != null && filteredInput.UserId.HasValue)
-                {
-                    Guid userId = default;
-                    if (filteredInput.UserId.Value == Guid.Empty)
-                    {
-                        using (var scope = ServiceProvider.CreateScope())
-                        {
-                            var currentUser = scope.ServiceProvider.GetRequiredService<ICurrentUser>();
-                            if (currentUser != null)
-                            {
-                                userId = currentUser.GetId();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        userId = filteredInput.UserId.Value;
-                    }
 
-                    var parameter = Expression.Parameter(typeof(TEntity), "p");
-                    var keyConstantExpression = Expression.Constant(userId, typeof(Guid));
-
-                    var propertyAccess = Expression.MakeMemberAccess(parameter, property);
-                    var expression = Expression.Equal(propertyAccess, keyConstantExpression);
-
-                    var equalExpression = expression != null ?
-                         Expression.Lambda<Func<TEntity, bool>>(expression, parameter)
-                         : p => false;
-
-                    query = query.Where(equalExpression);
-                }
-
-            }
-            return query;
-        }
-
+        //Abstract Methods
         protected virtual Task<IEnumerable<Guid>> GetUserIdsByOrganizationAsync(Guid organizationUnitId)
         {
             return Task.FromResult((IEnumerable<Guid>)new List<Guid>());
         }
+
         protected virtual Task<IEnumerable<Guid>> GetUserIdsByRelatedToAsync(Guid userId, string relationType)
         {
             return Task.FromResult((IEnumerable<Guid>)new List<Guid>());
@@ -260,102 +223,166 @@ where TGetListOutputDto : IEntityDto<TKey>
             return Task.FromResult((IEnumerable<Guid>)new List<Guid>());
         }
 
+        //Apply Filtered Methods
+
+        protected virtual IQueryable<TEntity> ApplyUserOrientedFiltered(IQueryable<TEntity> query, TGetListInput input)
+        {
+            if (input is IUserOrientedFilter)
+            {
+                var filteredInput = input as IUserOrientedFilter;
+                var entityUserIdIdiom = filteredInput.EntityUserIdIdiom;
+                if (string.IsNullOrEmpty(entityUserIdIdiom))
+                {
+                    entityUserIdIdiom = "UserId";
+                }
+                if (HasProperty<TEntity>(entityUserIdIdiom))
+                {
+                    var property = typeof(TEntity).GetProperty(entityUserIdIdiom);
+                    if (filteredInput != null && filteredInput.UserId.HasValue)
+                    {
+                        Guid userId = default;
+                        if (filteredInput.UserId.Value == Guid.Empty)
+                        {
+                            using (var scope = ServiceProvider.CreateScope())
+                            {
+                                var currentUser = scope.ServiceProvider.GetRequiredService<ICurrentUser>();
+                                if (currentUser != null)
+                                {
+                                    userId = currentUser.GetId();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            userId = filteredInput.UserId.Value;
+                        }
+
+                        var parameter = Expression.Parameter(typeof(TEntity), "p");
+                        var keyConstantExpression = Expression.Constant(userId, typeof(Guid));
+
+                        var propertyAccess = Expression.MakeMemberAccess(parameter, property);
+                        var expression = Expression.Equal(propertyAccess, keyConstantExpression);
+
+                        var equalExpression = expression != null ?
+                             Expression.Lambda<Func<TEntity, bool>>(expression, parameter)
+                             : p => false;
+
+                        query = query.Where(equalExpression);
+                    }
+                }
+            }
+            return query;
+        }
 
 
         protected virtual async Task<IQueryable<TEntity>> ApplyOrganizationOrientedFiltered(IQueryable<TEntity> query, TGetListInput input)
         {
-            if (input is IOrganizationOrientedFilter && HasProperty<TEntity>("UserId"))
+            if (input is IOrganizationOrientedFilter)
             {
-                var property = typeof(TEntity).GetProperty("UserId");
                 var filteredInput = input as IOrganizationOrientedFilter;
-                if (filteredInput != null && filteredInput.OrganizationUnitId.HasValue)
+                var entityUserIdIdiom = filteredInput.EntityUserIdIdiom;
+                if (string.IsNullOrEmpty(entityUserIdIdiom))
                 {
-
-                    var ids = await GetUserIdsByOrganizationAsync(filteredInput.OrganizationUnitId.Value);
-                    Expression originalExpression = null;
-                    var parameter = Expression.Parameter(typeof(TEntity), "p");
-                    foreach (var id in ids)
+                    entityUserIdIdiom = "UserId";
+                }
+                if (HasProperty<TEntity>(entityUserIdIdiom))
+                {
+                    var property = typeof(TEntity).GetProperty(entityUserIdIdiom);
+                    if (filteredInput != null && filteredInput.OrganizationUnitId.HasValue)
                     {
-                        var keyConstantExpression = Expression.Constant(id, typeof(Guid));
-                        var propertyAccess = Expression.MakeMemberAccess(parameter, property);
-                        var expressionSegment = Expression.Equal(propertyAccess, keyConstantExpression);
 
-                        if (originalExpression == null)
+                        var ids = await GetUserIdsByOrganizationAsync(filteredInput.OrganizationUnitId.Value);
+                        Expression originalExpression = null;
+                        var parameter = Expression.Parameter(typeof(TEntity), "p");
+                        foreach (var id in ids)
                         {
-                            originalExpression = expressionSegment;
+                            var keyConstantExpression = Expression.Constant(id, typeof(Guid));
+                            var propertyAccess = Expression.MakeMemberAccess(parameter, property);
+                            var expressionSegment = Expression.Equal(propertyAccess, keyConstantExpression);
+
+                            if (originalExpression == null)
+                            {
+                                originalExpression = expressionSegment;
+                            }
+                            else
+                            {
+                                originalExpression = Expression.Or(originalExpression, expressionSegment);
+                            }
                         }
-                        else
-                        {
-                            originalExpression = Expression.Or(originalExpression, expressionSegment);
-                        }
+
+                        var equalExpression = originalExpression != null ?
+                             Expression.Lambda<Func<TEntity, bool>>(originalExpression, parameter)
+                             : p => false;
+
+                        query = query.Where(equalExpression);
                     }
-
-                    var equalExpression = originalExpression != null ?
-                         Expression.Lambda<Func<TEntity, bool>>(originalExpression, parameter)
-                         : p => false;
-
-                    query = query.Where(equalExpression);
-
                 }
 
             }
             return query;
         }
 
-
         protected virtual async Task<IQueryable<TEntity>> ApplyRelationToOrientedFiltered(IQueryable<TEntity> query, TGetListInput input)
         {
-            if (input is IRelationToOrientedFilter && HasProperty<TEntity>("UserId"))
+            if (input is IRelationToOrientedFilter)
             {
-                var property = typeof(TEntity).GetProperty("UserId");
                 var filteredInput = input as IRelationToOrientedFilter;
-                if (filteredInput != null && filteredInput.RelationToUserId.HasValue && !string.IsNullOrEmpty(filteredInput.RelationType))
+                var entityUserIdIdiom = filteredInput.EntityUserIdIdiom;
+                if (string.IsNullOrEmpty(entityUserIdIdiom))
                 {
-
-                    Guid userId = default;
-                    if (filteredInput.RelationToUserId.Value == Guid.Empty)
+                    entityUserIdIdiom = "UserId";
+                }
+                if (HasProperty<TEntity>(entityUserIdIdiom))
+                {
+                    var property = typeof(TEntity).GetProperty(entityUserIdIdiom);
+                    if (filteredInput != null && filteredInput.RelationToUserId.HasValue && !string.IsNullOrEmpty(filteredInput.RelationType))
                     {
-                        using (var scope = ServiceProvider.CreateScope())
+
+                        Guid userId = default;
+                        if (filteredInput.RelationToUserId.Value == Guid.Empty)
                         {
-                            var currentUser = scope.ServiceProvider.GetRequiredService<ICurrentUser>();
-                            if (currentUser != null)
+                            using (var scope = ServiceProvider.CreateScope())
                             {
-                                userId = currentUser.GetId();
+                                var currentUser = scope.ServiceProvider.GetRequiredService<ICurrentUser>();
+                                if (currentUser != null)
+                                {
+                                    userId = currentUser.GetId();
+                                }
                             }
-                        }
-                    }
-                    else
-                    {
-                        userId = filteredInput.RelationToUserId.Value;
-                    }
-
-                    var ids = await GetUserIdsByRelatedToAsync(userId, filteredInput.RelationType);
-                    Expression originalExpression = null;
-                    var parameter = Expression.Parameter(typeof(TEntity), "p");
-                    foreach (var id in ids)
-                    {
-                        var keyConstantExpression = Expression.Constant(id, typeof(Guid));
-                        var propertyAccess = Expression.MakeMemberAccess(parameter, property);
-                        var expressionSegment = Expression.Equal(propertyAccess, keyConstantExpression);
-
-                        if (originalExpression == null)
-                        {
-                            originalExpression = expressionSegment;
                         }
                         else
                         {
-                            originalExpression = Expression.Or(originalExpression, expressionSegment);
+                            userId = filteredInput.RelationToUserId.Value;
                         }
+
+                        var ids = await GetUserIdsByRelatedToAsync(userId, filteredInput.RelationType);
+                        Expression originalExpression = null;
+                        var parameter = Expression.Parameter(typeof(TEntity), "p");
+                        foreach (var id in ids)
+                        {
+                            var keyConstantExpression = Expression.Constant(id, typeof(Guid));
+                            var propertyAccess = Expression.MakeMemberAccess(parameter, property);
+                            var expressionSegment = Expression.Equal(propertyAccess, keyConstantExpression);
+
+                            if (originalExpression == null)
+                            {
+                                originalExpression = expressionSegment;
+                            }
+                            else
+                            {
+                                originalExpression = Expression.Or(originalExpression, expressionSegment);
+                            }
+                        }
+
+                        var equalExpression = originalExpression != null ?
+                             Expression.Lambda<Func<TEntity, bool>>(originalExpression, parameter)
+                             : p => false;
+
+                        query = query.Where(equalExpression);
+
                     }
 
-                    var equalExpression = originalExpression != null ?
-                         Expression.Lambda<Func<TEntity, bool>>(originalExpression, parameter)
-                         : p => false;
-
-                    query = query.Where(equalExpression);
-
                 }
-
             }
             return query;
         }
@@ -363,52 +390,89 @@ where TGetListOutputDto : IEntityDto<TKey>
 
         protected virtual async Task<IQueryable<TEntity>> ApplyRelationFromOrientedFiltered(IQueryable<TEntity> query, TGetListInput input)
         {
-            if (input is IRelationFromOrientedFilter && HasProperty<TEntity>("UserId"))
+            if (input is IRelationFromOrientedFilter)
             {
-                var property = typeof(TEntity).GetProperty("UserId");
                 var filteredInput = input as IRelationFromOrientedFilter;
-                if (filteredInput != null && filteredInput.RelationFromUserId.HasValue && !string.IsNullOrEmpty(filteredInput.RelationType))
+                var entityUserIdIdiom = filteredInput.EntityUserIdIdiom;
+                if (string.IsNullOrEmpty(entityUserIdIdiom))
                 {
-
-                    Guid userId = default;
-                    if (filteredInput.RelationFromUserId.Value == Guid.Empty)
+                    entityUserIdIdiom = "UserId";
+                }
+                if (HasProperty<TEntity>(entityUserIdIdiom))
+                {
+                    var property = typeof(TEntity).GetProperty(entityUserIdIdiom);
+                    if (filteredInput != null && filteredInput.RelationFromUserId.HasValue && !string.IsNullOrEmpty(filteredInput.RelationType))
                     {
-                        using (var scope = ServiceProvider.CreateScope())
+
+                        Guid userId = default;
+                        if (filteredInput.RelationFromUserId.Value == Guid.Empty)
                         {
-                            var currentUser = scope.ServiceProvider.GetRequiredService<ICurrentUser>();
-                            if (currentUser != null)
+                            using (var scope = ServiceProvider.CreateScope())
                             {
-                                userId = currentUser.GetId();
+                                var currentUser = scope.ServiceProvider.GetRequiredService<ICurrentUser>();
+                                if (currentUser != null)
+                                {
+                                    userId = currentUser.GetId();
+                                }
                             }
-                        }
-                    }
-                    else
-                    {
-                        userId = filteredInput.RelationFromUserId.Value;
-                    }
-
-                    var ids = await GetUserIdsByRelatedFromAsync(userId, filteredInput.RelationType);
-                    Expression originalExpression = null;
-                    var parameter = Expression.Parameter(typeof(TEntity), "p");
-                    foreach (var id in ids)
-                    {
-                        var keyConstantExpression = Expression.Constant(id, typeof(Guid));
-                        var propertyAccess = Expression.MakeMemberAccess(parameter, property);
-                        var expressionSegment = Expression.Equal(propertyAccess, keyConstantExpression);
-
-                        if (originalExpression == null)
-                        {
-                            originalExpression = expressionSegment;
                         }
                         else
                         {
-                            originalExpression = Expression.Or(originalExpression, expressionSegment);
+                            userId = filteredInput.RelationFromUserId.Value;
                         }
-                    }
 
-                    var equalExpression = originalExpression != null ?
-                         Expression.Lambda<Func<TEntity, bool>>(originalExpression, parameter)
+                        var ids = await GetUserIdsByRelatedFromAsync(userId, filteredInput.RelationType);
+                        Expression originalExpression = null;
+                        var parameter = Expression.Parameter(typeof(TEntity), "p");
+                        foreach (var id in ids)
+                        {
+                            var keyConstantExpression = Expression.Constant(id, typeof(Guid));
+                            var propertyAccess = Expression.MakeMemberAccess(parameter, property);
+                            var expressionSegment = Expression.Equal(propertyAccess, keyConstantExpression);
+
+                            if (originalExpression == null)
+                            {
+                                originalExpression = expressionSegment;
+                            }
+                            else
+                            {
+                                originalExpression = Expression.Or(originalExpression, expressionSegment);
+                            }
+                        }
+
+                        var equalExpression = originalExpression != null ?
+                             Expression.Lambda<Func<TEntity, bool>>(originalExpression, parameter)
+                             : p => false;
+
+                        query = query.Where(equalExpression);
+
+                    }
+                }
+            }
+            return query;
+        }
+
+
+        protected virtual IQueryable<TEntity> ApplyStartDateOrientedFiltered(IQueryable<TEntity> query, TGetListInput input)
+        {
+            if (input is IStartDateOrientedFilter && HasProperty<TEntity>("CreationTime"))
+            {
+                var property = typeof(TEntity).GetProperty("CreationTime");
+                var filteredInput = input as IStartDateOrientedFilter;
+                if (filteredInput != null && filteredInput.StartDate.HasValue)
+                {
+                    Expression originalExpression = null;
+                    var parameter = Expression.Parameter(typeof(TEntity), "p");
+
+                    var dateConstantExpression = Expression.Constant(filteredInput.StartDate.Value, typeof(DateTime));
+
+                    var propertyAccess = Expression.MakeMemberAccess(parameter, property);
+                    var expression = Expression.GreaterThanOrEqual(propertyAccess, dateConstantExpression);
+
+                    var equalExpression = expression != null ?
+                         Expression.Lambda<Func<TEntity, bool>>(expression, parameter)
                          : p => false;
+
 
                     query = query.Where(equalExpression);
 
@@ -418,23 +482,34 @@ where TGetListOutputDto : IEntityDto<TKey>
             return query;
         }
 
-
-        protected virtual bool HasProperty<T>(string propertyName)
+        protected virtual IQueryable<TEntity> ApplyEndDateOrientedFiltered(IQueryable<TEntity> query, TGetListInput input)
         {
-            return typeof(T).GetProperty(propertyName) != null;
+            if (input is IEndDateOrientedFilter && HasProperty<TEntity>("CreationTime"))
+            {
+                var property = typeof(TEntity).GetProperty("CreationTime");
+                var filteredInput = input as IEndDateOrientedFilter;
+                if (filteredInput != null && filteredInput.EndDate.HasValue)
+                {
+                    Expression originalExpression = null;
+                    var parameter = Expression.Parameter(typeof(TEntity), "p");
+
+                    var dateConstantExpression = Expression.Constant(filteredInput.EndDate.Value, typeof(DateTime));
+
+                    var propertyAccess = Expression.MakeMemberAccess(parameter, property);
+                    var expression = Expression.LessThan(propertyAccess, dateConstantExpression);
+
+                    var equalExpression = expression != null ?
+                         Expression.Lambda<Func<TEntity, bool>>(expression, parameter)
+                         : p => false;
+
+
+                    query = query.Where(equalExpression);
+
+                }
+
+            }
+            return query;
         }
-
-        protected virtual bool HasProperty(TEntity entity, string propertyName)
-        {
-            return entity.GetType().GetProperty(propertyName) != null;
-        }
-
-
-        protected virtual bool HasProperty(Type type, string propertyName)
-        {
-            return type.GetProperty(propertyName) != null;
-        }
-
 
 
         protected virtual IQueryable<TEntity> ApplySearchFiltered(IQueryable<TEntity> query, TGetListInput input)
@@ -492,6 +567,23 @@ where TGetListOutputDto : IEntityDto<TKey>
 
 
         }
+
+        private bool HasProperty<T>(string propertyName)
+        {
+            return typeof(T).GetProperty(propertyName) != null;
+        }
+
+        private bool HasProperty(TEntity entity, string propertyName)
+        {
+            return entity.GetType().GetProperty(propertyName) != null;
+        }
+
+
+        private bool HasProperty(Type type, string propertyName)
+        {
+            return type.GetProperty(propertyName) != null;
+        }
+
 
 
 

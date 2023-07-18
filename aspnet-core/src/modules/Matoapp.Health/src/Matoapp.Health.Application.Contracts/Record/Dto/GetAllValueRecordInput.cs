@@ -1,6 +1,5 @@
 ﻿using Volo.Abp.Application.Dtos;
 using System;
-using System;
 using Application.Share.Services;
 
 namespace Matoapp.Health.Record.Dto
@@ -31,5 +30,6 @@ namespace Matoapp.Health.Record.Dto
         public Guid? RelationToUserId { get; set; }
         public string RelationType { get; set; }
 
+        public string EntityUserIdIdiom { get; }
     }
 }

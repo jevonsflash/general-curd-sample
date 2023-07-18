@@ -55,7 +55,6 @@ namespace Application.Share.ServiceBase
         }
 
 
-
         public virtual async Task<TEntityDto> UpdateAsync(TUpdateInput input)
         {
             await CheckUpdatePolicyAsync();

@@ -24,5 +24,6 @@ namespace Matoapp.Health.Alarm.Dto
         public Guid? OrganizationUnitId { get; set; }
         public Guid? RelationToUserId { get ; set ; }
         public string RelationType { get; set; }
+        public string EntityUserIdIdiom { get; }
     }
 }

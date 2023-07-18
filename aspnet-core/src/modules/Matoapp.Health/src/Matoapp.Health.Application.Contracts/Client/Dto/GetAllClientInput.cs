@@ -10,6 +10,7 @@ namespace Matoapp.Health.Client.Dto
     {
         public Guid? RelationToUserId { get; set; }
         public string RelationType { get; set; }
+        public string EntityUserIdIdiom { get; }
     }
 
 }
