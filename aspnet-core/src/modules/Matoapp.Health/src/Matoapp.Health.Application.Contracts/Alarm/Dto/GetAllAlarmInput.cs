@@ -8,7 +8,7 @@ using Application.Share.Services;
 
 namespace Matoapp.Health.Alarm.Dto
 {
-    public class GetAllAlarmInput : PagedAndSortedResultRequestDto, IUserOrientedFilter, IOrganizationOrientedFilter, IRelationToOrientedFilter, IKeywordOrientedFilter
+    public class GetAllAlarmInput : PagedAndSortedResultRequestDto, IUserOrientedFilter, IOrganizationOrientedFilter, IRelationToOrientedFilter, IKeywordOrientedFilter, IDateSpanOrientedFilter
     {
         //keyword
         public string Keyword { get; set; }
