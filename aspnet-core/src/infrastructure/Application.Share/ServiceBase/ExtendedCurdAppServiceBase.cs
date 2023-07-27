@@ -13,7 +13,6 @@ using System.Linq.Dynamic.Core;
 using Volo.Abp.Auditing;
 using Application.Share.Services;
 using System.Reflection;
-using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Users;
 
